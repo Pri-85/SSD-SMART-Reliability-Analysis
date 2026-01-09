@@ -1,0 +1,132 @@
+SMART / Health Information Log (0x02)
+Timestamp:                               2025-04-09T13:20:00Z
+
+-----------------------------------------
+Device Identity (Nominal)
+-----------------------------------------
+Model Number:                            "MT-DC9410-M2"
+Drive Type:                               M.2
+Serial Number:                            "SN613918W485"
+Firmware Revision:                        "F91373.6"
+NAND Type:                                TLC 3D NAND
+Namespace Count:                          1
+
+-----------------------------------------
+Storage Size (Ratio)
+-----------------------------------------
+Total NVM Capacity:                       14.90 TB
+Formatted Capacity:                       13.93 TB
+Overprovisioning Ratio:                   6 %
+
+-----------------------------------------
+Thermal Health (Ratio)
+-----------------------------------------
+Composite Temperature:                    315.5 K (42.5캜)
+Temperature Sensor 1:                     42.5캜
+Temperature Sensor 2:                     43.1캜
+Temperature Sensor 3:                     43.8캜
+Temperature Sensor 4:                     42.3캜
+
+-----------------------------------------
+Workload Profile (Ratio)
+-----------------------------------------
+Data Units Read:                          72,548,428 units
+Data Units Written:                       34,535,413 units
+Read/Write Ratio:                         N/A (derived from IO mix)
+Host Read Commands:                       1,033,639,084
+Host Write Commands:                      830,043,633
+Avg IO Size (Read):                       24.1 KB
+Avg IO Size (Write):                      27.4 KB
+
+-----------------------------------------
+I/O Activity (Ratio)
+-----------------------------------------
+Avg Queue Depth:                          32.0
+IOPS (5 min avg):                         36,572
+Bandwidth (Read):                         3.6 GB/s
+Bandwidth (Write):                        4.5 GB/s
+
+-----------------------------------------
+Latency Metrics (NVMe Spec)
+-----------------------------------------
+Read Latency (Avg):                       56.43 탎
+Read Latency (P99):                       169.92 탎
+Read Latency (Max):                       268.99 탎
+Write Latency (Avg):                      81.14 탎
+Write Latency (P99):                      262.51 탎
+Write Latency (Max):                      483.73 탎
+
+-----------------------------------------
+IO Timing (NVMe Spec)
+-----------------------------------------
+Average IO Completion Time:               0.291 ms
+
+-----------------------------------------
+Workload Characteristics
+-----------------------------------------
+Workload Block Size:                      16K
+Workload Type:                            Mixed Read/Write
+Queue Depth:                              32
+
+-----------------------------------------
+Usage History (Ratio)
+-----------------------------------------
+Power Cycles:                             37
+Power On Hours:                           4164
+Controller Busy Time:                     501 minutes
+
+-----------------------------------------
+Wear Level (Ratio)
+-----------------------------------------
+Percentage Used:                          2 %
+Wear Leveling Count (Avg/Max):            5 / 5
+Endurance Estimate Remaining:             97.3 %
+Available Spare:                          96.3 %
+Available Spare Threshold:                10 %
+
+-----------------------------------------
+Reliability Risk (Ratio)
+-----------------------------------------
+Unsafe Shutdowns:                         1
+Background Scrub Time:                    0.6 %
+GC Active Time:                           3.0 %
+
+-----------------------------------------
+Fault Indicators (Ratio)
+-----------------------------------------
+Media Errors:                             1
+Number of Error Info Log Entries:         1
+Bad Block Count (Grown):                  2
+PCIe Correctable Errors:                  38
+PCIe Uncorrectable Errors:                0
+
+-----------------------------------------
+SMART Alert Flags (Binary/Nominal)
+-----------------------------------------
+Critical Warning:                         0x00
+  [bit 0] Spare Below Threshold:          0
+  [bit 1] Temperature Threshold:          0
+  [bit 2] Reliability Degraded:           0
+  [bit 3] Read Only Mode:                 0
+  [bit 4] Volatile Memory Backup Failed:  0
+
+-----------------------------------------
+Energy Modeling (Ratio)
+-----------------------------------------
+Power State:                              PS1 (Active)
+Power State Transitions:                  47
+Avg Power (5 min):                        8.69 W
+Avg Power (1 hr):                         8.42 W
+Peak Power:                               10.66 W
+Idle Power:                               3.72 W
+
+-----------------------------------------
+Capability Flags (Nominal)
+-----------------------------------------
+Namespace Features:                       Thin Provisioning Supported
+Atomic Write Units:                       16 KB
+Metadata Capabilities:                    Extended + Separate
+Security Features:                        TCG Opal + Sanitize
+Endurance Group Support:                  Yes
+Telemetry Host-Initiated:                 Supported
+Telemetry Controller-Initiated:           Supported

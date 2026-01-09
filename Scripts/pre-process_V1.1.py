@@ -1,7 +1,12 @@
 """
+Step1: pre-process.py
+
+Author: Priya Pooja Hariharan
+Script Version: 1.1
+# Project: MIS581 SSD SSD-SMART-Reliability-Analysis 
 Preprocessing pipeline for synthetic SSD SMART logs.
 
-Extracts ONLY the fields required for ML:
+Extracts ONLY the fields required for the SSD SMART Dataset  attributes:
 timestamp, ff, model_number, drive_firmware_revision, nand_type,
 nvme_capacity_tb, overprovisioning_ratio, composite_temperature_c,
 data_units_read, data_units_written, host_read_commands, host_write_commands,
@@ -17,8 +22,9 @@ workload_type, queue_depth, workload_block_size_kb
 import re
 import pandas as pd
 from pathlib import Path
+import numpy as np
 
-RAW_ROOT = Path(r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Raw\SSD_Drive_Structure")
+RAW_ROOT = Path(r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Raw_V1.2\SSD_Drive_Structure")
 
 # ---------------------------------------------------------
 # Helper: Extract value from text via regex
@@ -129,7 +135,8 @@ def parse_smart_log(filepath: Path) -> dict:
 
     # Thermal
     record["composite_temperature_c"] = extract_value(
-        r"Composite Temperature:\s+\d+ K \((\d+)", text, int
+        #r"Composite Temperature:\s+\d+ K \((\d+)", text, int
+        r"Composite Temperature:\s+[\d\.]+\s*K\s*\(([\d\.]+)°C\)", text, float
     )
 
     # Workload counters
@@ -218,9 +225,11 @@ def load_all_logs(root: Path) -> pd.DataFrame:
 def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.dropna(axis=1, how="all").drop_duplicates()
 
+    # Basic normalization
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
-    df["nand_type"] = df["nand_type"].astype(str).str.strip()
-    df["nand_type"] = df["nand_type"].apply(simplify_nand_type)
+    #df["nand_type"] = df["nand_type"].astype(str).str.strip()
+    #df["nand_type"] = df["nand_type"].apply(simplify_nand_type)
+    df["nand_type"] = df["nand_type"].astype(str).str.strip().apply(simplify_nand_type)
     df["nvme_capacity_tb"] = df["nvme_capacity_tb"].apply(round_capacity_to_sku)
     df["workload_block_size_kb"] = df["workload_block_size"].apply(normalize_block_size)
     df["workload_type"] = df["workload_type"].apply(normalize_workload_type)
@@ -228,6 +237,91 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df["queue_depth"] = (
         df["queue_depth"].astype(str).str.extract(r"(\d+)").astype(float).astype("Int64")
     )
+    # ----------------------------------------------------------------------
+    # 1. FIX COMPOSITE TEMPERATURE EXTRACTION
+    # ----------------------------------------------------------------------
+    #df["composite_temperature_c"] = df["composite_temperature_c"].fillna(
+    #    df["raw_text"].str.extract(
+    #        r"Composite Temperature:\s+\d+\s*K\s*\((\d+)\s*C\)"
+    #    ).astype(float)
+    #)
+    # ----------------------------------------------------------------------
+    # 2. NAND-TYPE–AWARE SCALING FOR READ/WRITE COUNTERS
+    # ----------------------------------------------------------------------
+    def scale_rw(row):
+        base_r = row["data_units_read"] or 0
+        base_w = row["data_units_written"] or 0
+
+        if row["nand_type"] == "QLC":
+            factor = 8 if row["nvme_capacity_tb"] >= 30 else 4
+        elif row["nand_type"] == "MLC":
+            factor = 4 if row["nvme_capacity_tb"] >= 30 else 2
+        else:
+            factor = 1.0
+
+        return pd.Series({
+            "data_units_read": int(base_r * factor),
+            "data_units_written": int(base_w * factor)
+        })
+
+    df[["data_units_read", "data_units_written"]] = df.apply(scale_rw, axis=1)
+
+    # ----------------------------------------------------------------------
+    # 3. CAPACITY-AWARE ERROR INJECTION
+    # ----------------------------------------------------------------------
+    def inject_errors(row):
+        cap = row["nvme_capacity_tb"]
+        if cap in [2, 4, 8]:  # low capacity
+            err_factor = 5
+        elif cap in [15, 25]:
+            err_factor = 2
+        else:
+            err_factor = 1
+
+        return pd.Series({
+            "media_errors": int((row["media_errors"] or 0) * err_factor),
+            "pcie_correctable_errors": int((row["pcie_correctable_errors"] or 0) * err_factor),
+            "pcie_uncorrectable_errors": int((row["pcie_uncorrectable_errors"] or 0) * err_factor),
+            "bad_block_count_grown": int((row["bad_block_count_grown"] or 0) * err_factor)
+        })
+
+    df[["media_errors", "pcie_correctable_errors",
+        "pcie_uncorrectable_errors", "bad_block_count_grown"]] = df.apply(inject_errors, axis=1)
+
+    # ----------------------------------------------------------------------
+    # 4. WORKLOAD-TYPE PERFORMANCE ADJUSTMENT
+    # ----------------------------------------------------------------------
+    def adjust_perf(row):
+        bw_r = row["bandwidth_read_gbps"] or 0
+        bw_w = row["bandwidth_write_gbps"] or 0
+        iops = row["iops"] or 0
+        lat = row["io_completion_time_ms"] or 0
+
+        if row["workload_type"] == "sequential":
+            return pd.Series({
+                "bandwidth_read_gbps": bw_r * 1.5,
+                "bandwidth_write_gbps": bw_w * 1.5,
+                "iops": int(iops * 0.6),
+                "io_completion_time_ms": lat * 0.7
+            })
+        elif row["workload_type"] == "random":
+            return pd.Series({
+                "bandwidth_read_gbps": bw_r * 0.6,
+                "bandwidth_write_gbps": bw_w * 0.6,
+                "iops": int(iops * 1.4),
+                "io_completion_time_ms": lat * 1.3
+            })
+        else:
+            return pd.Series({
+                "bandwidth_read_gbps": bw_r,
+                "bandwidth_write_gbps": bw_w,
+                "iops": iops,
+                "io_completion_time_ms": lat
+            })
+
+    df[["bandwidth_read_gbps", "bandwidth_write_gbps",
+        "iops", "io_completion_time_ms"]] = df.apply(adjust_perf, axis=1)
+
 
     # Final column order
     cols = [
@@ -254,7 +348,7 @@ def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 # Save
 # ---------------------------------------------------------
 def save_output(df: pd.DataFrame):
-    out = Path("processed_smart_dataset.csv")
+    out = Path(r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.2\Step1-processed_smart_dataset_V1.2.csv")
     df.to_csv(out, index=False)
     print(f"Saved cleaned dataset → {out.resolve()}")
 

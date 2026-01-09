@@ -20,7 +20,8 @@ plt.style.use("seaborn-v0_8")
 # 0. Config
 # ------------------------------------------------------------
 
-INPUT_PATH = r"C:\Users\venki\Desktop\MS_Data_Anayltics\MIS581-Capstone\Test\MIS581_SSD_dataset.csv"
+#INPUT_PATH = r"C:\Users\venki\Desktop\MS_Data_Anayltics\MIS581-Capstone\Test\MIS581_SSD_dataset.csv"
+INPUT_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.2\Step1-processed_smart_dataset_V1.2.csv"
 
 CLEANED_CSV_PATH = "cleaned_SSD_dataset.csv"
 NUMERIC_SUMMARY_PATH = "numeric_summary_stats.csv"

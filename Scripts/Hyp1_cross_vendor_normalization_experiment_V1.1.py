@@ -183,6 +183,7 @@ class CrossVendorNormalizer(BaseEstimator, TransformerMixin):
 
 def derive_failure_label(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
+    df["throttling_events"] = (df["composite_temperature_c"] > 70).astype(int)
     df["failure_label"] = (
         (df["percentage_used"] >= 90) |
         (df["wear_level_max"] >= 95) |
@@ -559,10 +560,10 @@ def run_cross_vendor_experiment(df_raw: pd.DataFrame, df_syn: pd.DataFrame) -> N
 
 if __name__ == "__main__":
     df_raw = pd.read_csv(
-        r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.1\Step1-processed_smart_dataset_V1.1.csv"
+        r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.2\Step2-cleaned_SSD_dataset.csv"
     )
     df_syn = pd.read_csv(
-        r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.1\Step3-synthetic_smart_data_V1.1.csv"
+        r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.2\Step2-cleaned_SSD_dataset.csv"
     )
 
     run_cross_vendor_experiment(df_raw, df_syn)

@@ -1,26 +1,25 @@
 # =============================================================================
 # SSD SMART Dataset – Ingestion, Cleaning, Inspection, and Smart SSD Analysis
 # Author: Priya Pooja Hariharan
-# Script Version: 1.3
+# Script Version: 1.3 (corrected)
 # Project: MIS581 SSD SSD-SMART-Reliability-Analysis 
 # ==============================================================================
-
 import os
+import re
 import random
 import string
-
-import pandas as pd
-import numpy as np
-import seaborn as sns
 import matplotlib
-matplotlib.use("Agg")   # Use non-GUI backend
+matplotlib.use("Agg")   # Non-GUI backend (no Tkinter)
 
+import numpy as np
+import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer
-
 from ydata_profiling import ProfileReport
+
 
 plt.style.use("seaborn-v0_8")
 
@@ -28,34 +27,33 @@ plt.style.use("seaborn-v0_8")
 # 0. Config
 # ------------------------------------------------------------
 
-INPUT_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.1\Step3-synthetic_smart_data_V1.1.csv"
+INPUT_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.2\Step1-processed_smart_dataset_V1.2.csv"
 
-CLEANED_CSV_PATH = "cleaned_SSD_dataset.csv"
-NUMERIC_SUMMARY_PATH = "numeric_summary_stats.csv"
-CORR_MATRIX_PATH = "correlation_matrix_numeric.csv"
-CORR_LATENCY_PATH = "correlation_latency_focus.csv"
-MISSINGNESS_PATH = "missingness_summary.csv"
-ATTR_OVERVIEW_PATH = "attribute_overview.csv"
-HEATMAP_ALL_PATH = "corr_heatmap_numeric.png"
-HEATMAP_LATENCY_PATH = "corr_heatmap_latency_focus.png"
-HEATMAP_VENDOR_LAT_TREND_PATH = "latency_trend_by_vendor.png"
-EDA_REPORT_PATH = "SSD_SMART_EDA_Report.html"
+CLEANED_CSV_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\cleaned_SSD_dataset.csv"
+NUMERIC_SUMMARY_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\numeric_summary_stats.csv"
+CORR_MATRIX_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\correlation_matrix_numeric.csv"
+CORR_LATENCY_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\correlation_latency_focus.csv"
+MISSINGNESS_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\missingness_summary.csv"
+ATTR_OVERVIEW_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\attribute_overview.csv"
+HEATMAP_ALL_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\corr_heatmap_numeric.png"
+HEATMAP_LATENCY_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\corr_heatmap_latency_focus.png"
+HEATMAP_VENDOR_LAT_TREND_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\latency_trend_by_vendor.png"
+EDA_REPORT_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\SSD_SMART_EDA_Report.html"
 
 # Visualization outputs (Option B & C)
-HEATMAP_THERMAL_WORKLOAD_PATH = "corr_thermal_vs_workload.png"
-HEATMAP_RELIABILITY_WORKLOAD_PATH = "corr_reliability_vs_workload.png"
-BOXPLOT_THERMAL_BY_WORKLOAD_PATH = "boxplot_thermal_by_workload.png"
-BAR_HEALTH_BY_POWER_BIN_PATH = "bar_health_by_power_bins.png"
+HEATMAP_THERMAL_WORKLOAD_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\corr_thermal_vs_workload.png"
+HEATMAP_RELIABILITY_WORKLOAD_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\corr_reliability_vs_workload.png"
+BOXPLOT_THERMAL_BY_WORKLOAD_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\boxplot_thermal_by_workload.png"
+BAR_HEALTH_BY_POWER_BIN_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\bar_health_by_power_bins.png"
 
 # Categorical plots outputs
-CATEGORICAL_FREQ_DIR = "categorical_frequency_plots"
-CATEGORICAL_BOX_DIR = "categorical_boxplots"
+CATEGORICAL_FREQ_DIR = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\categorical_frequency_plots"
+CATEGORICAL_BOX_DIR = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\categorical_boxplots"
 
 os.makedirs(CATEGORICAL_FREQ_DIR, exist_ok=True)
 os.makedirs(CATEGORICAL_BOX_DIR, exist_ok=True)
 
 HOST_INTERFACE_MBPS = 375.0  # reference throughput
-
 
 # ------------------------------------------------------------
 # 1. Load dataset
@@ -64,12 +62,10 @@ HOST_INTERFACE_MBPS = 375.0  # reference throughput
 df = pd.read_csv(INPUT_PATH, low_memory=False)
 print("\nDataset loaded:", df.shape)
 
-
 # ------------------------------------------------------------
 # 1B. Inject synthetic system metadata + inspection logic
 # ------------------------------------------------------------
 
-# Template records (manufacturer, configuration, CPU)
 template_records = [
     ("HPE",        "HPE NF5280M6",                 "Intel"),
     ("Inspur",     "Inspur ThinkSystem SR650",     "Intel"),
@@ -95,7 +91,6 @@ def random_model_number():
     prefix = random.choice(["NV", "PM", "XG", "MT"])
     return prefix + "".join(random.choices(string.digits, k=4))
 
-# manufacturer → allowed configs / cpus
 config_map = {}
 cpu_map = {}
 for m, cfg, cpu in template_records:
@@ -130,6 +125,41 @@ df["system_id"] = system_id
 
 print("\nSynthetic system metadata injected")
 
+# ------------------------------------------------------------
+# 1C. System generation + NAND assignment based on config
+# ------------------------------------------------------------
+
+def infer_generation(cfg):
+    m = re.search(r"(\d+)$", str(cfg))
+    if m:
+        return int(m.group(1))
+    return 4  # default legacy
+
+def assign_nand(gen):
+    if gen >= 5:
+        return random.choices(
+            ["QLC", "MLC", "TLC", "SLC"],
+            weights=[0.45, 0.30, 0.20, 0.05],
+            k=1
+        )[0]
+    else:
+        return random.choices(
+            ["TLC", "MLC", "SLC", "QLC"],
+            weights=[0.55, 0.25, 0.15, 0.05],
+            k=1
+        )[0]
+
+df["system_generation"] = df["system_configuration"].apply(infer_generation)
+df["nand_type_synthetic"] = df["system_generation"].apply(assign_nand)
+
+# If nand_type from SMART is missing, fill from synthetic
+if "nand_type" in df.columns:
+    df["nand_type"] = df["nand_type"].fillna(df["nand_type_synthetic"])
+else:
+    df["nand_type"] = df["nand_type_synthetic"]
+
+print("\nSystem generation inferred and NAND type synthesized where missing")
+
 # Metadata inspection
 inspection_report = {}
 
@@ -156,12 +186,13 @@ inspection_report["invalid_cpu_rows"] = len(invalid_cpu)
 inspection_report["manufacturer_distribution"] = df["system_manufacturer"].value_counts().to_dict()
 inspection_report["cpu_distribution"] = df["cpu_name"].value_counts().to_dict()
 
-pd.DataFrame.from_dict(inspection_report, orient="index").to_csv("metadata_inspection_report.csv")
+pd.DataFrame.from_dict(inspection_report, orient="index").to_csv(
+    r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\metadata_inspection_report.csv"
+)
 
 print("\nMetadata inspection completed. Summary:")
 for k, v in inspection_report.items():
     print(f"  {k}: {v}")
-
 
 # ------------------------------------------------------------
 # 2. Standardize column names
@@ -177,7 +208,6 @@ df.columns = (
 )
 
 print("\nColumn names standardized")
-
 
 # ------------------------------------------------------------
 # 3. SMART telemetry grouping
@@ -208,7 +238,8 @@ time_cols = [c for c in df.columns if contains_any(c, [
 
 # Thermal and health
 temp_cols = [c for c in df.columns if contains_any(c, [
-    "temperature_warning", "temperature_critical", "temperature_current"
+    "temperature_warning", "temperature_critical", "temperature_current",
+    "composite_temperature_c"
 ])]
 
 health_cols = [c for c in df.columns if contains_any(c, [
@@ -233,31 +264,33 @@ power_cols = [c for c in df.columns if contains_any(c, [
 
 # Latency
 latency_cols = [c for c in df.columns if contains_any(c, [
-    "read_latency", "write_latency", "latency"
+    "read_latency", "write_latency", "latency", "io_completion_time_ms"
 ])]
 
 # Reliability events
 reliability_event_cols = [c for c in df.columns if contains_any(c, [
     "unsafe_shutdowns", "controller_busy_time",
     "media_and_data_integrity_errors",
-    "error_information_log_entries"
+    "error_information_log_entries",
+    "media_errors", "pcie_correctable_errors",
+    "pcie_uncorrectable_errors", "bad_block_count_grown"
 ])]
 
 # Non-numeric forced exclusions
 force_non_numeric = [
     "ff",
     "warning_comp_temperature_time",
-    "critical_comp_temperature_time"
+    "critical_comp_temperature_time",
+    "workload_type"
 ]
 
 print("\nSMART telemetry groups identified")
 
-
 # ------------------------------------------------------------
-# 4. Date handling (Local Time -> year, month, treated as categorical)
+# 4. Date handling (use timestamp)
 # ------------------------------------------------------------
 
-local_time_col = "local_time" if "local_time" in df.columns else None
+local_time_col = "timestamp" if "timestamp" in df.columns else None
 
 if local_time_col:
     df[local_time_col] = pd.to_datetime(df[local_time_col], errors="coerce", utc=True)
@@ -268,19 +301,57 @@ if local_time_col:
 else:
     print("\nLocal Time column not found; year/month not extracted")
 
-
 # ------------------------------------------------------------
-# 5. Convert numeric fields (exclude metadata, time, forced non-numeric, year, month)
+# 5. Convert numeric fields
 # ------------------------------------------------------------
 
-non_numeric_like = set(metadata_cols + time_cols + force_non_numeric + ["year", "month"])
+non_numeric_like = set(metadata_cols + time_cols + force_non_numeric + ["year", "month", "nand_type"])
 numeric_candidates = [c for c in df.columns if c not in non_numeric_like]
+
+# Explicitly ensure nvme_capacity_tb is numeric and *not* treated as categorical
+if "nvme_capacity_tb" in df.columns:
+    df["nvme_capacity_tb"] = pd.to_numeric(df["nvme_capacity_tb"], errors="coerce")
+    if "nvme_capacity_tb" not in numeric_candidates:
+        numeric_candidates.append("nvme_capacity_tb")
 
 for col in numeric_candidates:
     df[col] = pd.to_numeric(df[col], errors="coerce")
 
 print("\nNumeric conversion complete")
 
+# ------------------------------------------------------------
+# 5B. CPU-type–aware performance scaling (AMD uplift)
+# ------------------------------------------------------------
+
+def scale_perf(row):
+    iops = row.get("iops", np.nan)
+    bw_r = row.get("bandwidth_read_gbps", np.nan)
+    bw_w = row.get("bandwidth_write_gbps", np.nan)
+    lat_col_name = "io_completion_time_ms" if "io_completion_time_ms" in df.columns else "latency"
+    lat = row.get(lat_col_name, np.nan)
+
+    if row.get("cpu_name") == "AMD":
+        return pd.Series({
+            "iops": iops * 1.25 if pd.notna(iops) else np.nan,
+            "bandwidth_read_gbps": bw_r * 1.20 if pd.notna(bw_r) else np.nan,
+            "bandwidth_write_gbps": bw_w * 1.20 if pd.notna(bw_w) else np.nan,
+            lat_col_name: lat * 0.90 if pd.notna(lat) else np.nan
+        })
+    else:
+        return pd.Series({
+            "iops": iops,
+            "bandwidth_read_gbps": bw_r,
+            "bandwidth_write_gbps": bw_w,
+            lat_col_name: lat
+        })
+
+if "iops" in df.columns or "bandwidth_read_gbps" in df.columns:
+    perf_scaled = df.apply(scale_perf, axis=1)
+    for col in ["iops", "bandwidth_read_gbps", "bandwidth_write_gbps", "io_completion_time_ms", "latency"]:
+        if col in perf_scaled.columns:
+            df[col] = perf_scaled[col]
+
+print("\nCPU-type performance scaling applied (AMD uplift)")
 
 # ------------------------------------------------------------
 # 6. Missingness analysis
@@ -300,11 +371,10 @@ attribute_overview.to_csv(ATTR_OVERVIEW_PATH, index=False)
 print("\nMissingness and attribute overview saved")
 
 missing_indicators = df[numeric_candidates].isna().astype(int)
-missing_corr = missing_indicators.corr()  # in-memory only
-
+missing_corr = missing_indicators.corr()
 
 # ------------------------------------------------------------
-# 7. MICE imputation (remove all-NaN numeric columns first)
+# 7. MICE imputation
 # ------------------------------------------------------------
 
 numeric_candidates = [
@@ -324,7 +394,6 @@ df[numeric_candidates] = numeric_imputed
 
 print("\nMICE imputation completed for numeric fields")
 
-
 # ------------------------------------------------------------
 # 8. Domain validation
 # ------------------------------------------------------------
@@ -334,6 +403,8 @@ for col in numeric_candidates:
 
 if "temperature_current" in df.columns:
     df["temperature_current"] = df["temperature_current"].clip(0, 120)
+if "composite_temperature_c" in df.columns:
+    df["composite_temperature_c"] = df["composite_temperature_c"].clip(0, 120)
 
 if "percentage_used" in df.columns:
     df["percentage_used"] = df["percentage_used"].clip(0, 100)
@@ -343,7 +414,6 @@ if "available_spare_threshold" in df.columns:
     df["available_spare_threshold"] = df["available_spare_threshold"].clip(0, 100)
 
 print("\nDomain validation applied to imputed values")
-
 
 # ------------------------------------------------------------
 # 9. Numeric summary statistics
@@ -363,7 +433,6 @@ numeric_summary = basic_desc.join(extra_stats)
 numeric_summary.to_csv(NUMERIC_SUMMARY_PATH)
 
 print("\nNumeric summary statistics saved")
-
 
 # ------------------------------------------------------------
 # 10. Correlation matrices
@@ -400,7 +469,6 @@ if not latency_focus_df.empty:
 else:
     print("\nNo latency-focused numeric columns available; skipping latency correlation")
 
-
 # ------------------------------------------------------------
 # 11. Vendor-wise latency trends
 # ------------------------------------------------------------
@@ -411,7 +479,10 @@ vendor_col = vendor_candidates[0] if vendor_candidates else None
 lat_col = next((c for c in latency_cols if c in df.columns), None)
 
 if vendor_col and lat_col:
-    df_vendor_lat = df[[vendor_col, lat_col, "year"]].dropna()
+    cols_for_vendor = [vendor_col, lat_col]
+    if "year" in df.columns:
+        cols_for_vendor.append("year")
+    df_vendor_lat = df[cols_for_vendor].dropna()
 
     if not df_vendor_lat.empty:
 
@@ -433,7 +504,7 @@ if vendor_col and lat_col:
         plt.savefig("latency_bar_by_vendor.png")
         plt.close()
 
-        if df_vendor_lat["year"].nunique() > 1:
+        if "year" in df_vendor_lat.columns and df_vendor_lat["year"].nunique() > 1:
             plt.figure(figsize=(10, 6))
             sns.boxplot(data=df_vendor_lat, x="year", y=lat_col)
             plt.title(f"Latency Distribution by Year ({lat_col})")
@@ -460,7 +531,6 @@ if vendor_col and lat_col:
 else:
     print("\nVendor or latency column missing; skipping vendor latency plots")
 
-
 # ------------------------------------------------------------
 # 12. Smart SSD metrics
 # ------------------------------------------------------------
@@ -471,7 +541,6 @@ if "power_cycles" in df.columns and "host_read_commands" in df.columns:
     )
 
 print("\nSmart SSD utilization metric computed (host_read_cmds_per_power_cycle)")
-
 
 # ------------------------------------------------------------
 # 13. Visualizations – Option B (grouped, auto-binned)
@@ -502,10 +571,10 @@ def add_bins(series, bins=4):
     except Exception:
         return pd.Series(["bin_0"] * len(series), index=series.index)
 
-
 if thermal_health_cols and workload_reliability_cols:
     primary_thermal = next(
-        (c for c in ["temperature_current", "temperature_warning", "temperature_critical"] if c in thermal_health_cols),
+        (c for c in ["temperature_current", "temperature_warning", "temperature_critical", "composite_temperature_c"]
+         if c in thermal_health_cols),
         thermal_health_cols[0]
     )
     primary_workload = workload_reliability_cols[0]
@@ -541,7 +610,6 @@ if thermal_health_cols and workload_reliability_cols:
             print("\nBar chart (percentage_used by power_on_hours bins) saved")
 else:
     print("\nOption B grouped plots not generated (missing thermal/health or workload columns)")
-
 
 # ------------------------------------------------------------
 # 14. Visualizations – Option C (correlation-style heatmaps)
@@ -579,9 +647,8 @@ if thermal_health_numeric and workload_reliability_numeric:
 else:
     print("\nOption C correlation-style plots not generated (missing numeric thermal/health or workload/reliability)")
 
-
 # ------------------------------------------------------------
-# 15. Categorical analysis (Option C2 – all categoricals)
+# 15. Categorical analysis
 # ------------------------------------------------------------
 
 explicit_categorical = [
@@ -592,7 +659,7 @@ explicit_categorical = [
     "model_number",
     "firmware_revision",
     "nand_type",
-    "nvme_capacity",
+    # NOTE: nvme_capacity_tb intentionally NOT included here anymore
     "year",
     "month",
 ]
@@ -603,6 +670,7 @@ for c in explicit_categorical:
     if c in df.columns and c not in all_categorical_cols:
         all_categorical_cols.append(c)
 
+# Categorical frequency plots
 for col in all_categorical_cols:
     value_counts = df[col].value_counts(dropna=False)
     if value_counts.empty:
@@ -623,6 +691,7 @@ for col in all_categorical_cols:
 
 print("\nCategorical frequency plots and tables saved")
 
+# Categorical vs numeric boxplots
 for cat_col in all_categorical_cols:
     for num_col in numeric_candidates:
         pair_df = df[[cat_col, num_col]].dropna()
@@ -649,7 +718,6 @@ for cat_col in all_categorical_cols:
 
 print("\nCategorical-vs-numeric boxplots saved")
 
-
 # ------------------------------------------------------------
 # 16. Safe HTML profiling
 # ------------------------------------------------------------
@@ -662,7 +730,6 @@ profile = ProfileReport(
 
 profile.to_file(EDA_REPORT_PATH)
 print("\nSafe HTML EDA report generated")
-
 
 # ------------------------------------------------------------
 # 17. Save cleaned dataset

@@ -1,0 +1,39 @@
+                               OLS Regression Results                              
+===================================================================================
+Dep. Variable:     pcie_correctable_errors   R-squared:                       0.000
+Model:                                 OLS   Adj. R-squared:                 -0.000
+Method:                      Least Squares   F-statistic:                    0.7330
+Date:                     Mon, 29 Dec 2025   Prob (F-statistic):              0.753
+Time:                             17:57:00   Log-Likelihood:            -4.5408e+05
+No. Observations:                    80695   AIC:                         9.082e+05
+Df Residuals:                        80679   BIC:                         9.083e+05
+Df Model:                               15                                         
+Covariance Type:                 nonrobust                                         
+=======================================================================================================
+                                          coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------------------
+Intercept                              65.1964      0.748     87.167      0.000      63.730      66.662
+C(nand_type)[T.QLC]                    -1.2045      1.065     -1.131      0.258      -3.292       0.883
+C(nand_type)[T.SLC]                    -0.1934      1.058     -0.183      0.855      -2.266       1.879
+C(nand_type)[T.TLC]                     0.2807      1.057      0.266      0.790      -1.790       2.352
+C(qd_bin)[T.Q2]                         0.5174      1.290      0.401      0.688      -2.011       3.046
+C(qd_bin)[T.Q3]                         1.3460      1.292      1.042      0.298      -1.187       3.879
+C(qd_bin)[T.Q4]                         0.0273      1.286      0.021      0.983      -2.493       2.548
+C(nand_type)[T.QLC]:C(qd_bin)[T.Q2]     1.6247      1.835      0.885      0.376      -1.972       5.222
+C(nand_type)[T.SLC]:C(qd_bin)[T.Q2]     0.4395      1.832      0.240      0.810      -3.152       4.031
+C(nand_type)[T.TLC]:C(qd_bin)[T.Q2]    -1.5709      1.828     -0.859      0.390      -5.153       2.012
+C(nand_type)[T.QLC]:C(qd_bin)[T.Q3]    -1.9294      1.835     -1.052      0.293      -5.525       1.667
+C(nand_type)[T.SLC]:C(qd_bin)[T.Q3]    -2.2665      1.831     -1.238      0.216      -5.855       1.323
+C(nand_type)[T.TLC]:C(qd_bin)[T.Q3]    -1.4674      1.835     -0.800      0.424      -5.063       2.128
+C(nand_type)[T.QLC]:C(qd_bin)[T.Q4]     0.1470      1.816      0.081      0.935      -3.412       3.706
+C(nand_type)[T.SLC]:C(qd_bin)[T.Q4]    -0.2740      1.827     -0.150      0.881      -3.855       3.307
+C(nand_type)[T.TLC]:C(qd_bin)[T.Q4]    -0.6917      1.832     -0.378      0.706      -4.283       2.899
+==============================================================================
+Omnibus:                    13203.478   Durbin-Watson:                   1.304
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            20773.021
+Skew:                           1.227   Prob(JB):                         0.00
+Kurtosis:                       3.391   Cond. No.                         19.1
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.

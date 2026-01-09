@@ -104,14 +104,15 @@ def load_dataset(path: str, cfg: Hyp3Config) -> pd.DataFrame:
     if cfg.target_col not in df.columns:
         print("[INFO] failure_label not found — deriving automatically...")
         df["failure_label"] = (
-            (df["percentage_used"] >= 90) |
-            (df["wear_level_max"] >= 95) |
-            (df["endurance_estimate_remaining"] <= 10) |
-            (df["media_errors"] > 0) |
-            (df["bad_block_count_grown"] > 0) |
+            (df["percentage_used"] >= 10) |
+            (df["wear_level_max"] >= 10) |
+            (df["endurance_estimate_remaining"] <= 50) |
+            (df["media_errors"] > 20) |
+            (df["bad_block_count_grown"] > 20) |
             (df["pcie_uncorrectable_errors"] > 0) |
-            (df["unsafe_shutdowns"] > 0) |
-            (df["throttling_events"] > 0)
+            (df["unsafe_shutdowns"] > 1) |
+            #(df["throttling_events"] > 0)
+            (df["composite_temperature_c"] > 40)
         ).astype(int)
 
     # Convert usage metrics to numeric
@@ -412,5 +413,6 @@ def run_hypothesis3_analysis(data_path: str):
 
 if __name__ == "__main__":
     # Update this path to your actual processed dataset
-    DATA_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.1\Step3-synthetic_smart_data_V1.1.csv"
+    #DATA_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.1\Step3-synthetic_smart_data_V1.1.csv"
+    DATA_PATH = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\Data\Processed_V1.2\Step2-cleaned_SSD_dataset.csv"
     run_hypothesis3_analysis(DATA_PATH)

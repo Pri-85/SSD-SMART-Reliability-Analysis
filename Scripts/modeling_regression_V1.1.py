@@ -36,14 +36,17 @@ from sklearn.model_selection import train_test_split
 #BASE_PLOT_DIR = "plots" os.makedirs(BASE_PLOT_DIR, exist_ok=True) 
 BASE_PLOT_DIR = "plots"
 os.makedirs(BASE_PLOT_DIR, exist_ok=True)
+OUTPUT_DIR = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\Analytic_Model_results_V1.2"
 
 def save_plot(model_name, plot_name): 
      """ 
      Save the current matplotlib figure into: plots/<model_name>/<plot_name>.png 
-     """ 
+     """
+     filename = f"{model_name}_{plot_name}.png"     
      folder = os.path.join(BASE_PLOT_DIR, model_name) 
      os.makedirs(folder, exist_ok=True) 
-     filepath = os.path.join(folder, f"{plot_name}.png") 
+     #filepath = os.path.join(folder, f"{plot_name}.png") 
+     filepath = os.path.join(OUTPUT_DIR, filename)
      plt.savefig(filepath, dpi=300, bbox_inches="tight") 
      plt.close()
 
@@ -57,8 +60,9 @@ def load_data():
     so they can be parsed by Patsy formulas.
     """
     #csv_path = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_analysis_results_V1.1\processed_smart_dataset.csv"
-    csv_path = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_analysis_results_V1.1\synthetic_smart_data.csv"
+    csv_path = r"C:\Users\venki\SSD-SMART-Reliability-Analysis\TestResults\EDA_Results_V1.3\cleaned_SSD_dataset.csv"
     df = pd.read_csv(csv_path)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     print("\n=== Loaded dataset ===")
     print(f"Shape: {df.shape}")
@@ -281,7 +285,7 @@ def one_way_anova(df):
 
 
     # Fit ANOVA model
-    model = smf.ols("wear_level_avg ~ C(form_factor)", data=df).fit()
+    model = smf.ols("wear_level_avg ~ C(ff)", data=df).fit()
     anova_table = sm.stats.anova_lm(model, typ=2)
 
     print("\n=== One-Way ANOVA: wear_level_avg ~ form_factor ===")
@@ -291,7 +295,7 @@ def one_way_anova(df):
     # 1. Boxplot by manufacturer
     # -----------------------------
     plt.figure(figsize=(12, 6))
-    sns.boxplot(x="form_factor", y="wear_level_avg", data=df)
+    sns.boxplot(x="ff", y="wear_level_avg", data=df)
     plt.title("wear_level_avg by Model Number")
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -301,7 +305,7 @@ def one_way_anova(df):
     # 2. Violin plot
     # -----------------------------
     plt.figure(figsize=(12, 6))
-    sns.violinplot(x="form_factor", y="wear_level_avg", data=df)
+    sns.violinplot(x="ff", y="wear_level_avg", data=df)
     plt.title("wear_level_avg Distribution by Model Number")
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -369,7 +373,7 @@ def two_way_anova(df):
     # Fit model
     df["avg_qd_bin"] = pd.qcut(df["avg_queue_depth"], q=4, labels=["Q1","Q2","Q3","Q4"])
     model = smf.ols(
-        "pcie_correctable_errors ~ C(form_factor) * avg_qd_bin",
+        "pcie_correctable_errors ~ C(ff) * avg_qd_bin",
         data=df
     ).fit()
     anova_table = sm.stats.anova_lm(model, typ=2)
@@ -381,7 +385,7 @@ def two_way_anova(df):
     # 1. Boxplot by Nand rype
     # -----------------------------
     plt.figure(figsize=(12, 6))
-    sns.boxplot(x="form_factor", y="pcie_correctable_errors", data=df)
+    sns.boxplot(x="ff", y="pcie_correctable_errors", data=df)
     plt.title("PCIe correctible errors by Nand Type")
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -400,7 +404,7 @@ def two_way_anova(df):
     # -----------------------------
     # 3. Interaction Plot 
     # ----------------------------- 
-    manufacturers = df["form_factor"].unique() 
+    manufacturers = df["ff"].unique() 
     num_levels = len(manufacturers) 
     # Generate markers automatically 
     default_markers = ["o", "s", "D", "^", "v", "P", "X", "*", "<", ">"] 
@@ -408,7 +412,7 @@ def two_way_anova(df):
     plt.figure(figsize=(10, 6))
     interaction_plot(
     df["avg_queue_depth"],
-    df["form_factor"],
+    df["ff"],
     df["pcie_correctable_errors"],
     #colors=["red", "blue", "green", "purple", "orange"],
     #markers=["o", "s", "D", "^", "v"],   # <-- still hard‑coded
@@ -485,7 +489,7 @@ def ancova(df):
 
     # Fit ANCOVA model
     model = smf.ols(
-        "data_units_written ~ C(form_factor) + data_units_read",
+        "data_units_written ~ C(ff) + data_units_read",
         data=df
     ).fit()
 
@@ -496,7 +500,7 @@ def ancova(df):
     # 1. Boxplot by manufacturer
     # -----------------------------
     plt.figure(figsize=(12, 6))
-    sns.boxplot(x="form_factor", y="data_units_read", data=df)
+    sns.boxplot(x="ff", y="data_units_read", data=df)
     plt.title("Read Latency by System Manufacturer")
     plt.xticks(rotation=45)
     plt.tight_layout()
@@ -508,7 +512,7 @@ def ancova(df):
     sns.lmplot(
         x="data_units_written",
         y="data_units_read",
-        hue="form_factor",
+        hue="ff",
         data=df,
         height=6,
         aspect=1.3,
@@ -522,8 +526,8 @@ def ancova(df):
     # 3. Parallel slopes diagnostic
     # -----------------------------
     plt.figure(figsize=(10, 6))
-    for m in df["form_factor"].unique():
-        subset = df[df["form_factor"] == m]
+    for m in df["ff"].unique():
+        subset = df[df["ff"] == m]
         sns.regplot(
             x=subset["data_units_written"],
             y=subset["data_units_read"],
@@ -624,7 +628,7 @@ def regularized_models(df):
     # Ensure target exists
     if target not in numeric_df.columns:
         print(f"[WARN] {target} not found in numeric columns.")
-        return None, None
+        return None
 
     X = numeric_df.drop(columns=[target])
     y = numeric_df[target]
@@ -655,7 +659,7 @@ def regularized_models(df):
     # Check for NaN after scaling
     if pd.isna(X_scaled).any():
         print("[ERROR] NaN detected after scaling. Some columns may still be invalid.")
-        return None, None
+        return None
 
     # Train-test split
     X_train, X_test, y_train, y_test = train_test_split(
@@ -740,67 +744,80 @@ def regularized_models(df):
 # ---------------------------------------------------------------------------
 # 7. GENERALIZED LINEAR MODELS (GLM) FOR COUNT DATA
 # ---------------------------------------------------------------------------
+
 def glm_count_model(df):
     """
     Predict bandwidth_write_gbps (count data) using Poisson regression.
-    Formula:
-        bandwidth_write_gbps ~ iops + percentage_used + workload_type
-
-    Includes:
-    - Histogram of bandwidth_write_gbps
-    - Scatterplots of predictors vs bandwidth_write_gbps
-    - Predicted vs actual plot
-    - Residual distribution
-    - Residual vs fitted plot
-    - Q–Q plot of deviance residuals
     """
+
     import matplotlib.pyplot as plt
     import seaborn as sns
     import statsmodels.api as sm
+    import statsmodels.formula.api as smf
     import numpy as np
 
-    # REQUIRED for saving plots
     model_name = "glm_count_model"
 
+    # ---------------------------------------------------------
+    # FIX 1: Remove rows where dependent variable is zero
+    # ---------------------------------------------------------
+    df_glm = df[df["bandwidth_write_gbps"] > 0].copy()
+
+    if df_glm.empty:
+        print("\n[ERROR] GLM cannot run: bandwidth_write_gbps has no non-zero values.")
+        print("       Choose a different dependent variable (e.g., pcie_correctable_errors).")
+        return None
+
+    # ---------------------------------------------------------
+    # FIX 2: Repair workload_type
+    # ---------------------------------------------------------
+    df_glm["workload_type"] = (
+        df_glm["workload_type"]
+        .fillna("unknown")
+        .astype("category")
+    )
+
+    # ---------------------------------------------------------
     # Fit Poisson GLM
+    # ---------------------------------------------------------
     model = smf.glm(
-        "bandwidth_write_gbps ~ iops + percentage_used + workload_type",
-        data=df,
+        "bandwidth_write_gbps ~ iops + percentage_used + C(workload_type)",
+        data=df_glm,
         family=sm.families.Poisson()
     ).fit()
 
     print("\n=== GLM Poisson: bandwidth_write_gbps ===")
     print(model.summary())
 
-    # -----------------------------
-    # 1. Histogram of count variable
-    # -----------------------------
+    # ---------------------------------------------------------
+    # 1. Histogram
+    # ---------------------------------------------------------
     plt.figure(figsize=(8, 5))
-    sns.histplot(df["bandwidth_write_gbps"], bins=30, kde=False, color="darkred")
+    sns.histplot(df_glm["bandwidth_write_gbps"], bins=30, kde=False, color="darkred")
     plt.title("Histogram of bandwidth_write_gbps")
     plt.xlabel("bandwidth_write_gbps")
     plt.tight_layout()
     save_plot(model_name, "histogram")
 
-    # -----------------------------
-    # 2. Scatterplots of predictors
-    # -----------------------------
+    # ---------------------------------------------------------
+    # 2. Scatterplots
+    # ---------------------------------------------------------
     predictors = ["iops", "percentage_used", "workload_type"]
 
     for col in predictors:
         plt.figure(figsize=(8, 5))
-        sns.scatterplot(x=df[col], y=df["bandwidth_write_gbps"], alpha=0.5)
+        sns.scatterplot(x=df_glm[col], y=df_glm["bandwidth_write_gbps"], alpha=0.5)
         plt.title(f"bandwidth_write_gbps vs {col}")
         plt.xlabel(col)
         plt.ylabel("bandwidth_write_gbps")
         plt.tight_layout()
         save_plot(model_name, f"scatter_{col}")
 
-    # -----------------------------
+    # ---------------------------------------------------------
     # 3. Predicted vs actual
-    # -----------------------------
-    y_pred = model.predict(df)
-    y_true = df["bandwidth_write_gbps"]
+    # ---------------------------------------------------------
+    y_pred = model.predict(df_glm)
+    y_true = df_glm["bandwidth_write_gbps"]
 
     plt.figure(figsize=(8, 5))
     sns.scatterplot(x=y_true, y=y_pred, alpha=0.5)
@@ -813,9 +830,9 @@ def glm_count_model(df):
     plt.tight_layout()
     save_plot(model_name, "predicted_vs_actual")
 
-    # -----------------------------
+    # ---------------------------------------------------------
     # 4. Residual distribution
-    # -----------------------------
+    # ---------------------------------------------------------
     residuals = model.resid_deviance
 
     plt.figure(figsize=(8, 5))
@@ -825,9 +842,9 @@ def glm_count_model(df):
     plt.tight_layout()
     save_plot(model_name, "residual_distribution")
 
-    # -----------------------------
+    # ---------------------------------------------------------
     # 5. Residual vs fitted
-    # -----------------------------
+    # ---------------------------------------------------------
     fitted = model.fittedvalues
 
     plt.figure(figsize=(8, 5))
@@ -839,9 +856,9 @@ def glm_count_model(df):
     plt.tight_layout()
     save_plot(model_name, "residuals_vs_fitted")
 
-    # -----------------------------
-    # 6. Q–Q plot of deviance residuals
-    # -----------------------------
+    # ---------------------------------------------------------
+    # 6. Q–Q plot
+    # ---------------------------------------------------------
     plt.figure(figsize=(6, 6))
     sm.qqplot(residuals, line="45", fit=True)
     plt.title("Q–Q Plot of Deviance Residuals")
@@ -858,11 +875,13 @@ def glm_count_model(df):
 if __name__ == "__main__":
     df = load_data()
 
+
     # Run models sequentially
     simple_linear_regression(df)
     multiple_linear_regression(df)
     one_way_anova(df)
     two_way_anova(df)
     ancova(df)
-    regularized_models(df)
+    regularized_models(df) 
+
     glm_count_model(df)

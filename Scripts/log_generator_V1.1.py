@@ -1,4 +1,10 @@
 """
+Step2: log_generator.py
+
+Author: Priya Pooja Hariharan
+Script Version: 1.1
+# Project: MIS581 SSD SSD-SMART-Reliability-Analysis 
+
 SSD Synthetic SMART Log Generator
 ---------------------------------
 

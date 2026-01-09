@@ -1,0 +1,39 @@
+                              OLS Regression Results                             
+=================================================================================
+Dep. Variable:     io_completion_time_ms   R-squared:                       0.009
+Model:                               OLS   Adj. R-squared:                  0.008
+Method:                    Least Squares   F-statistic:                     53.33
+Date:                   Mon, 29 Dec 2025   Prob (F-statistic):          3.86e-139
+Time:                           18:20:59   Log-Likelihood:                 40905.
+No. Observations:                  80695   AIC:                        -8.178e+04
+Df Residuals:                      80681   BIC:                        -8.165e+04
+Df Model:                             13                                         
+Covariance Type:               nonrobust                                         
+========================================================================================================
+                                           coef    std err          t      P>|t|      [0.025      0.975]
+--------------------------------------------------------------------------------------------------------
+Intercept                                0.2503      0.005     55.161      0.000       0.241       0.259
+C(cpu_name)[T.Intel]                     0.0268      0.002     15.027      0.000       0.023       0.030
+C(ff)[T.E3.s]                            0.0036      0.002      2.117      0.034       0.000       0.007
+C(ff)[T.M.2]                             0.0020      0.002      1.191      0.234      -0.001       0.005
+C(ff)[T.U.2]                             0.0031      0.002      1.849      0.064      -0.000       0.006
+C(ff)[T.U.3]                             0.0012      0.002      0.714      0.475      -0.002       0.005
+C(system_manufacturer)[T.Fujitsu]       -0.0019      0.003     -0.739      0.460      -0.007       0.003
+C(system_manufacturer)[T.HPE]           -0.0010      0.003     -0.383      0.702      -0.006       0.004
+C(system_manufacturer)[T.Inspur]        -0.0003      0.002     -0.142      0.887      -0.004       0.004
+C(system_manufacturer)[T.Lenovo]        -0.0025      0.002     -1.399      0.162      -0.006       0.001
+C(system_manufacturer)[T.SuperMicro]     0.0016      0.002      0.784      0.433      -0.002       0.005
+data_units_written                    4.985e-12   2.44e-12      2.045      0.041    2.07e-13    9.76e-12
+composite_temperature_c                 -0.0001      0.000     -1.183      0.237      -0.000    8.77e-05
+power_on_hours                       -1.757e-07   2.54e-07     -0.691      0.489   -6.74e-07    3.22e-07
+==============================================================================
+Omnibus:                     5083.143   Durbin-Watson:                   1.553
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             4987.197
+Skew:                           0.559   Prob(JB):                         0.00
+Kurtosis:                       2.517   Cond. No.                     2.71e+09
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 2.71e+09. This might indicate that there are
+strong multicollinearity or other numerical problems.

@@ -1,0 +1,31 @@
+                 Generalized Linear Model Regression Results                  
+==============================================================================
+Dep. Variable:           power_cycles   No. Observations:                80695
+Model:                            GLM   Df Residuals:                    80679
+Model Family:                 Poisson   Df Model:                           15
+Link Function:                    Log   Scale:                          1.0000
+Method:                          IRLS   Log-Likelihood:            -5.7289e+05
+Date:                Mon, 29 Dec 2025   Deviance:                   7.5652e+05
+Time:                        18:20:49   Pearson chi2:                 6.59e+05
+No. Iterations:                     5   Pseudo R-squ. (CS):           0.001255
+Covariance Type:            nonrobust                                         
+=====================================================================================================
+                                        coef    std err          z      P>|z|      [0.025      0.975]
+-----------------------------------------------------------------------------------------------------
+Intercept                             3.2147      0.006    513.775      0.000       3.202       3.227
+workload_type[T.random]               0.0020      0.002      1.038      0.299      -0.002       0.006
+workload_type[T.sequential]           0.0043      0.002      2.267      0.023       0.001       0.008
+cpu_name[T.Intel]                     0.0014      0.002      0.576      0.565      -0.003       0.006
+ff[T.E3.s]                           -0.0033      0.002     -1.455      0.146      -0.008       0.001
+ff[T.M.2]                            -0.0037      0.002     -1.622      0.105      -0.008       0.001
+ff[T.U.2]                             0.0023      0.002      1.015      0.310      -0.002       0.007
+ff[T.U.3]                            -0.0013      0.002     -0.587      0.557      -0.006       0.003
+system_manufacturer[T.Fujitsu]       -0.0008      0.003     -0.242      0.809      -0.008       0.006
+system_manufacturer[T.HPE]           -0.0130      0.003     -3.809      0.000      -0.020      -0.006
+system_manufacturer[T.Inspur]        -0.0079      0.003     -2.942      0.003      -0.013      -0.003
+system_manufacturer[T.Lenovo]         0.0006      0.002      0.268      0.789      -0.004       0.005
+system_manufacturer[T.SuperMicro]    -0.0040      0.003     -1.503      0.133      -0.009       0.001
+data_units_written                -1.339e-12   3.31e-12     -0.405      0.686   -7.83e-12    5.15e-12
+composite_temperature_c               0.0006      0.000      3.983      0.000       0.000       0.001
+percentage_used                       0.0012      0.000      5.138      0.000       0.001       0.002
+=====================================================================================================
